@@ -1,20 +1,19 @@
-; Assemble as:
-;   nasm  -f bin  -o ampm.com  ampmExample.asm
-;
-; 2005-10-25
+; Sean Boonzaier - 61710199
+
 ;-----------------------------------------------------------
 
-    section .text
-
-;  DOS' .com executable format: entry point must be at 0x100
     org 0x100
 main:                   ; this label is documentary only
+    call change_col
+    call move_curs
     mov  dx, prompt
     call prtstring      ; a very minor subroutine
-
     call getAnswer      ; a less-minor subroutine
     call convertAnswer
-    cmp bl, '2'
+    mov ax, bx
+    mov bl, 03h
+    div bl
+    cmp ah, 0
     JE amLabel
 
 pmLabel:                ; "else" clause starts here
@@ -42,6 +41,26 @@ prtstring:
     ret
 ;----------------
 
+change_col:
+
+				MOV AH, 06h    	; Scroll up function
+				XOR AL, AL     	; Clear entire screen
+				XOR CX, CX     	; Upper left corner CH=row, CL=column
+				MOV DX, 184FH  	; lower right corner DH=row, DL=column 
+				MOV BH, 1Fh    	; WhiteOnBlue
+				INT 10H
+				ret
+
+move_curs:						; Changes color of console
+								; The address of the input parameter block is in DX
+				MOV AH, 02h    	; Set Cursor position function
+				MOV DH, 00h
+				MOV DL, 00h
+				MOV BH, 00h  
+				INT 10H
+				ret
+
+
 ; Obtain keyboard input.
 ;   Expects:  nothing
 ;   Returns:  first letter of the keyboard input, in AL
@@ -59,24 +78,11 @@ getAnswer:
 convertAnswer:
     mov  bl, al
     sub  bx, 30h
-    add  bx, 01h
-    add  bx, 30h
     ret
 ;----------------
 
+prompt  db "Enter a value between 1 and 9? $"
+am      db "Divisible by 3", 0x0d, 0x0a, '$'
+pm      db 'Not divisible by 3', 0x0d, 0x0a, "$"
 
-; the data - not a separate section in .COM files
-
-prompt  db "am or pm? $"
-am      db "You did it!", 0x0d, 0x0a, '$'     ; Either single-quotes or
-pm      db 'You failed!', 0x0d, 0x0a, "$"   ; ...double-quotes work.
-
-; DOS' input-string function requires a buffer structured like this:
-;       struct input-buffer {
-;           BYTE8 maxLength = N;  /* N is 20 in this case */
-;           BYTE8 usedLength;
-;           BYTE8 buffer[ N ];
-;       }
 answer  db 20, 0
-;resb 20, 0
-;-----------------------------------------------------------
