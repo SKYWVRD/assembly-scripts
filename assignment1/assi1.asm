@@ -17,12 +17,12 @@ main:                   ; this label is documentary only
     JE amLabel
 
 pmLabel:                ; "else" clause starts here
-    mov  dx, pm
+    mov  dx, notDivisible
     call prtstring
     jmp  done           ; finish the "else" clause
 
 amLabel:                ; "then" clause starts here
-    mov  dx, am
+    mov  dx, divisible
     call prtstring
     jmp  done           ; finish the "then" clause (unneeded instruction!)
 
@@ -82,7 +82,7 @@ convertAnswer:
 ;----------------
 
 prompt  db "Enter a value between 1 and 9? $"
-am      db "Divisible by 3", 0x0d, 0x0a, '$'
-pm      db 'Not divisible by 3', 0x0d, 0x0a, "$"
+divisible      db "Divisible by 3", 0x0d, 0x0a, '$'
+notDivisible      db 'Not divisible by 3', 0x0d, 0x0a, "$"
 
 answer  db 20, 0
