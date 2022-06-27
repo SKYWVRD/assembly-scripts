@@ -3,44 +3,51 @@
 ;-----------------------------------------------------------
 
     org 0x100
-main:                   ; this label is documentary only
+
+; Main section of program
+main:                   
     call change_col
     call move_curs
     mov  dx, prompt
-    call prtstring      ; a very minor subroutine
-    call getAnswer      ; a less-minor subroutine
-    call convertAnswer
+    call prtstring      
+    call getAnswer      
+    call convertToInt
     mov ax, bx
-    mov bl, 03h
-    div bl
-    cmp ah, 0
-    JE amLabel
+    mov bl, 03h        ; stores 3 into bl for division on next line 
+    div bl             ; divides value in ax which is the input value by 3
+    cmp ah, 0          ; checks if the remainder of the division is 0
+    JE isMulti
 
-pmLabel:                ; "else" clause starts here
+notMultiLabel:                ; Runs if there is a remainder (not a multiple)
+    mov dx, cr_lf
+    call prtstring
     mov  dx, notDivisible
     call prtstring
-    jmp  done           ; finish the "else" clause
+    jmp  done           
 
-amLabel:                ; "then" clause starts here
+isMultiLabel:                ; Runs if there is no remainder (is a multiple)
+    mov dx, cr_lf
+    call prtstring
     mov  dx, divisible
     call prtstring
-    jmp  done           ; finish the "then" clause (unneeded instruction!)
+    jmp  done           
+;----------------
 
+; Function to terminate program when called
 done:
-    mov  al, 0          ; return code
-    mov  ah, 0x4c       ; Alternatively:  "mov ax, 0x4c00"
+    mov  al, 0          
+    mov  ah, 0x4c       
     int  0x21
 ;----------------
 
-; Encapsulate use of DOS' string-printing function.
-;   Expects:  address of string-to-be-printed, in DX
-;   Returns:  nothing
+; Function to print string passed into dx
 prtstring:
     mov  ah, 9          ; DOS print-string function
     int  0x21
     ret
 ;----------------
 
+; Changes console color to White on Blue
 change_col:
 
 				MOV AH, 06h    	; Scroll up function
@@ -50,8 +57,10 @@ change_col:
 				MOV BH, 1Fh    	; WhiteOnBlue
 				INT 10H
 				ret
+;----------------
 
-move_curs:						; Changes color of console
+; Moves the cursor to start of console when program runs
+move_curs:						
 								; The address of the input parameter block is in DX
 				MOV AH, 02h    	; Set Cursor position function
 				MOV DH, 00h
@@ -59,30 +68,28 @@ move_curs:						; Changes color of console
 				MOV BH, 00h  
 				INT 10H
 				ret
+;----------------
 
 
-; Obtain keyboard input.
-;   Expects:  nothing
-;   Returns:  first letter of the keyboard input, in AL
+; Obtains the keyboard input by the user
 getAnswer:
-    mov  dx, answer     ; a structured input buffer - see below
-    mov  ah, 0x0a       ; DOS input-string function
-    int  0x21           ; DOS services interrupt
-    mov  al, [answer+2] ; al <-- 3rd position/1st character of buffer
+    mov  dx, answer     
+    mov  ah, 0x0a       
+    int  0x21           
+    mov  al, [answer+2] ; 3rd position/1st character of buffer stored in al
     ret
 ;----------------
 
-; Obtain keyboard input.
-;   Expects:  nothing
-;   Returns:  first letter of the keyboard input, in AL
-convertAnswer:
+; converts input ascii string to workable integer
+convertToInt:
     mov  bl, al
     sub  bx, 30h
     ret
 ;----------------
 
-prompt  db "Enter a value between 1 and 9? $"
-divisible      db "Divisible by 3", 0x0d, 0x0a, '$'
-notDivisible      db 'Not divisible by 3', 0x0d, 0x0a, "$"
-
+; various declared variables for the code
+prompt  db "Enter a value between 1 and 9: $"
+divisible      db "The number is not divisible by 3", 0x0d, 0x0a, '$'
+notDivisible      db '"The number is not divisible by 3", 0x0d, 0x0a, "$"
+cr_lf			db 0dh, 0ah, '$'
 answer  db 20, 0
