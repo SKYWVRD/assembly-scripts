@@ -1,0 +1,94 @@
+     1                                  				bits 16
+     2                                  				org 0x100			; Star program at offset 100
+     3                                  
+     4                                  ; This program accepts a user name from the keyboard			
+     5                                  ; and displays the message 'Hello user_name' on the screen
+     6                                  ;
+     7                                  
+     8                                  
+     9                                  
+    10                                  ;--------------------- Jump over data declarations ------------------
+    11                                  
+    12                                  
+    13 00000000 EB47                    				jmp main			; Jump to main program
+    14                                  
+    15                                  
+    16                                  ;
+    17                                  
+    18                                  ;--------------------- Data declarations ----------------------------
+    19                                  
+    20                                  ; prompt
+    21                                  
+    22 00000002 456E74657220796F75-     message:		db 'Enter your name please	$'
+    23 0000000B 72206E616D6520706C-
+    24 00000014 656173650924       
+    25                                  
+    26                                  ;
+    27                                  
+    28                                  ; Input_buffer
+    29                                  
+    30 0000001A 14                      in_buf:			db 20				; Lengh of input buffer (20 chars)
+    31 0000001B 00                      len_in:			db 00				; Lenght of input string will be stored here by dos
+    32 0000001C 09<rept>                user:			times 20 db '	'	; Reserve 20 storage positions for the input buffer
+    33                                  
+    34 00000030 0D0A24                  cr_lf:			db 0dh, 0ah, '$'	; Carriage return, Line feed
+    35                                  
+    36                                  ;
+    37                                  
+    38 00000033 48656C6C6F2024          out_mess:		db 'Hello $'		; Output message
+    39                                  
+    40                                  ;
+    41                                  
+    42                                  ;---------------------- Display routine --------------------------
+    43                                  
+    44                                  ;
+    45                                  
+    46                                  display: 							; Display a message on the screen
+    47                                  									; The address of the message must be in DX
+    48 0000003A B409                    				mov ah, 09h			; Request - Display message
+    49 0000003C CD21                    				int 21h				; DOS System call
+    50 0000003E C3                      				ret
+    51                                  
+    52                                  ;----------------------Get characters that are input by user -------------
+    53                                  
+    54                                  ;
+    55                                  
+    56                                  get_chars:							; Accept a string of characters from the keyboard
+    57                                  									; The address of the input parameter block is in DX
+    58 0000003F B40A                    				mov ah, 0x0a		; Request - buffered keyboard input
+    59 00000041 CD21                    				int 21h				; DOS system call
+    60 00000043 C3                      				ret
+    61                                  
+    62                                  ;---------------------- Change color of screen -------------
+    63                                  
+    64                                  ;
+    65                                  
+    66                                  change_col:							; Changes color of console
+    67                                  									; The address of the input parameter block is in DX
+    68 00000044 B730                    				mov bh, 30h
+    69 00000046 CD10                    				int 10h				; DOS system call
+    70 00000048 C3                      				ret
+    71                                  
+    72                                  
+    73                                  ; -------------------- Main program ----------------------------
+    74                                  main: 
+    75 00000049 E8F8FF                  				call change_col		; Update screen
+    76 0000004C BA[0200]                				mov	dx, message		; Address of prompt
+    77 0000004F E8E8FF                  				call display 		; Display prompt
+    78 00000052 BA[1A00]                				mov dx, in_buf 		; Address of input buffer
+    79 00000055 E8E7FF                  				call get_chars 		; Get buffered keyboard input
+    80 00000058 BA[3000]                				mov dx, cr_lf 		; Address of CR and LF
+    81 0000005B E8DCFF                  				call display 		; Send CRLF to screen
+    82 0000005E BA[3300]                				mov dx, out_mess 	; Address of 'Hello'
+    83 00000061 E8D6FF                  				call display 		; Display 'Hello'
+    84 00000064 BA[1C00]                				mov dx, user 		; Address of user name entered
+    85 00000067 BB[1C00]                				mov bx, user 		; Get start of input string
+    86 0000006A 021E[1B00]              				add bl, [len_in] 	; Add length of string entered to BL to point
+    87                                  									; to 'Enter' (Carriage return) keyed in at the end
+    88                                  									; of the input string by the user
+    89 0000006E B020                    				mov al, 20h			; 20h = space (ascii)
+    90 00000070 8807                    				mov [bx], al		; Overwrite carriage return with a space
+    91 00000072 E8C5FF                  				call display 		; Display user name
+    92 00000075 CD20                    				int 20h 			; Terminate program
+    93                                  
+    94                                  	
