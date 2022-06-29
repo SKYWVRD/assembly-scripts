@@ -16,7 +16,7 @@ main:
     mov bl, 03h        ; stores 3 into bl for division on next line 
     div bl             ; divides value in ax which is the input value by 3
     cmp ah, 0          ; checks if the remainder of the division is 0
-    JE isMulti
+    JE isMultiLabel
 
 notMultiLabel:                ; Runs if there is a remainder (not a multiple)
     mov dx, cr_lf
@@ -89,7 +89,7 @@ convertToInt:
 
 ; various declared variables for the code
 prompt  db "Enter a value between 1 and 9: $"
-divisible      db "The number is not divisible by 3", 0x0d, 0x0a, '$'
-notDivisible      db '"The number is not divisible by 3", 0x0d, 0x0a, "$"
-cr_lf			db 0dh, 0ah, '$'
+divisible      db "The number is divisible by 3", 0x0d, 0x0a, "$"
+notDivisible      db "The number is not divisible by 3", 0x0d, 0x0a, "$"
+cr_lf			db 0dh, 0ah, "$"
 answer  db 20, 0
